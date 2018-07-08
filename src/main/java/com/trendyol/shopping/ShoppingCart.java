@@ -10,8 +10,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import static com.trendyol.JsonProperties.*;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.trendyol.entity.Campaign;
 import com.trendyol.entity.Category;
 import com.trendyol.entity.Coupon;
@@ -61,6 +63,41 @@ public class ShoppingCart {
 			productMap.put(product, quantity);
 			getProductsWithCategories().put(category, productMap);
 		}
+	}
+
+	/**
+	 * Prepares a {@link JsonObject} for this {@link ShoppingCart}.
+	 */
+	public JsonObject print() {
+		JsonObject printed = new JsonObject();
+		Set<Entry<Category, Map<Product, Integer>>> categories = getProductsWithCategories().entrySet();
+		JsonArray categoriesArrayJson = new JsonArray();
+		for (Entry<Category, Map<Product, Integer>> categoryEntry : categories) {
+			Category category = categoryEntry.getKey();
+			Map<Product, Integer> products = categoryEntry.getValue();
+			JsonObject categoryJson = new JsonObject();
+			categoryJson.addProperty(TITLE, category.getTitle());
+			JsonArray productArrayJson = new JsonArray();
+			Set<Entry<Product, Integer>> productSet = products.entrySet();
+			for (Entry<Product, Integer> productEntry : productSet) {
+				Product product = productEntry.getKey();
+				Integer quantity = productEntry.getValue();
+				BigDecimal unitPrice = product.getPrice().setScale(2, RoundingMode.HALF_EVEN);
+	
+				JsonObject productJson = new JsonObject();
+				productJson.addProperty(NAME, product.getTitle());
+				productJson.addProperty(QUANTITY, quantity);
+				productJson.addProperty(UNIT_PRICE, unitPrice);
+				productJson.addProperty(TOTAL_PRICE, calculateTotalPrice(quantity, unitPrice));
+				productArrayJson.add(productJson);
+			}
+			categoryJson.add(PRODUCTS, productArrayJson);
+			categoriesArrayJson.add(categoryJson);
+		}
+		printed.add(CATEGORIES, categoriesArrayJson);
+		printed.addProperty(TOTAL_PRICE, getTotalPrice());
+		printed.addProperty(TOTAL_AMOUNT, getTotalAmountAfterDiscounts());
+		return printed;
 	}
 
 	/**
@@ -202,41 +239,6 @@ public class ShoppingCart {
 	}
 
 	/**
-	 * Prepares a {@link JsonObject} for this {@link ShoppingCart}.
-	 */
-	JsonObject print() {
-		JsonObject printed = new JsonObject();
-		Set<Entry<Category, Map<Product, Integer>>> categories = getProductsWithCategories().entrySet();
-		JsonArray categoriesArrayJson = new JsonArray();
-		for (Entry<Category, Map<Product, Integer>> categoryEntry : categories) {
-			Category category = categoryEntry.getKey();
-			Map<Product, Integer> products = categoryEntry.getValue();
-			JsonObject categoryJson = new JsonObject();
-			categoryJson.addProperty(TITLE, category.getTitle());
-			JsonArray productArrayJson = new JsonArray();
-			Set<Entry<Product, Integer>> productSet = products.entrySet();
-			for (Entry<Product, Integer> productEntry : productSet) {
-				Product product = productEntry.getKey();
-				Integer quantity = productEntry.getValue();
-				BigDecimal unitPrice = product.getPrice().setScale(2, RoundingMode.HALF_EVEN);
-
-				JsonObject productJson = new JsonObject();
-				productJson.addProperty(NAME, product.getTitle());
-				productJson.addProperty(QUANTITY, quantity);
-				productJson.addProperty(UNIT_PRICE, unitPrice);
-				productJson.addProperty(TOTAL_PRICE, calculateTotalPrice(quantity, unitPrice));
-				productArrayJson.add(productJson);
-			}
-			categoryJson.add(PRODUCTS, productArrayJson);
-			categoriesArrayJson.add(categoryJson);
-		}
-		printed.add(CATEGORIES, categoriesArrayJson);
-		printed.addProperty(TOTAL_PRICE, getTotalPrice());
-		printed.addProperty(TOTAL_AMOUNT, getTotalAmountAfterDiscounts());
-		return printed;
-	}
-
-	/**
 	 * Calculates total price for a product which unit price and quantity are given.
 	 * 
 	 * @param quantity
@@ -247,5 +249,9 @@ public class ShoppingCart {
 	 */
 	private BigDecimal calculateTotalPrice(Integer quantity, BigDecimal unitPrice) {
 		return unitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_EVEN);
+	}
+	
+	public static ShoppingCart fromJson(String jsonStr) throws JsonSyntaxException {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, ShoppingCart.class);
 	}
 }

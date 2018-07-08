@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.trendyol.shopping.ShoppingCart;
 
 import java.util.Set;
@@ -100,6 +102,10 @@ public class Campaign {
 		}
 		return discount;
 
+	}
+	
+	public static Campaign fromJson(String jsonStr) throws JsonSyntaxException {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, Campaign.class);
 	}
 
 }

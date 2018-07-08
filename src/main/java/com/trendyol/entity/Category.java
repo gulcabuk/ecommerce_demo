@@ -3,6 +3,9 @@ package com.trendyol.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+
 /**
  * This class is used to define categories of system. Each {@link Product} has a
  * {@link Category}. {@link Category} can have a parent {@link Category}.
@@ -113,6 +116,10 @@ public class Category {
 			}
 		}
 		return relatedCampaigns;
+	}
+
+	public static Category fromJson(String jsonStr) throws JsonSyntaxException {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, Category.class);
 	}
 
 }

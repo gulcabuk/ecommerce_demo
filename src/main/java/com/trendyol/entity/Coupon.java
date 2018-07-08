@@ -2,6 +2,8 @@ package com.trendyol.entity;
 
 import java.math.BigDecimal;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.trendyol.shopping.ShoppingCart;
 
 /**
@@ -65,6 +67,10 @@ public class Coupon {
 	 */
 	public BigDecimal calculateDiscount(BigDecimal currentTotalPrice) {
 		return getDiscountType().calculateDiscount(currentTotalPrice, this);
+	}
+	
+	public static Coupon fromJson(String jsonStr) throws JsonSyntaxException {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, Coupon.class);
 	}
 
 }

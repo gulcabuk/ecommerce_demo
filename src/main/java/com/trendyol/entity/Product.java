@@ -2,6 +2,9 @@ package com.trendyol.entity;
 
 import java.math.BigDecimal;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+
 /**
  * Product is used to define items on system.
  * 
@@ -88,4 +91,7 @@ public class Product {
 		return true;
 	}
 
+	public static Product fromJson(String jsonStr) throws JsonSyntaxException {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, Product.class);
+	}
 }
