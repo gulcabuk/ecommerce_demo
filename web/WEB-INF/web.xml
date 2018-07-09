@@ -12,8 +12,7 @@
 		<init-param>
 			<param-name>jersey.config.server.provider.packages</param-name>
 			<param-value>
-				com.trendyol.service,
-				io.swagger.jaxrs.listing
+				com.trendyol.service
 			</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
