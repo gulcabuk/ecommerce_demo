@@ -92,7 +92,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyDiscounts(campaign);
 
 		// assert
-		assertEquals(43.99, shoppingCart.getCampaignDiscount().doubleValue(), 0);
+		assertEquals(43.99, shoppingCart.getCampaignDiscountBigDecimal().doubleValue(), 0);
 	}
 
 	@Test
@@ -110,7 +110,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyDiscounts(campaign, campaign2);
 
 		// assert
-		assertEquals(50.0, shoppingCart.getCampaignDiscount().doubleValue(), 0);
+		assertEquals(50.0, shoppingCart.getCampaignDiscountBigDecimal().doubleValue(), 0);
 	}
 
 	@Test
@@ -130,7 +130,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyDiscounts(campaign, campaign2, campaign3);
 
 		// assert
-		assertEquals(50.0, shoppingCart.getCampaignDiscount().doubleValue(), 0);
+		assertEquals(50.0, shoppingCart.getCampaignDiscountBigDecimal().doubleValue(), 0);
 	}
 
 	@Test
@@ -151,7 +151,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyDiscounts(campaign, campaign2, campaign3);
 
 		// assert
-		assertEquals(93.99, shoppingCart.getCampaignDiscount().doubleValue(), 0);
+		assertEquals(93.99, shoppingCart.getCampaignDiscountBigDecimal().doubleValue(), 0);
 	}
 
 	@Test
@@ -172,7 +172,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyDiscounts(campaign, campaign2, campaign3);
 
 		// assert
-		assertEquals(43.99, shoppingCart.getCampaignDiscount().doubleValue(), 0);
+		assertEquals(43.99, shoppingCart.getCampaignDiscountBigDecimal().doubleValue(), 0);
 	}
 
 	@Test
@@ -187,7 +187,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyCoupon(coupon);
 
 		// assert
-		assertEquals(43.99, shoppingCart.getCouponDiscount().doubleValue(), 0);
+		assertEquals(43.99, shoppingCart.getCouponDiscount(), 0);
 	}
 
 	@Test
@@ -201,7 +201,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyCoupon(coupon);
 
 		// assert
-		assertEquals(BigDecimal.valueOf(0), shoppingCart.getCouponDiscount());
+		assertEquals(0.0, shoppingCart.getCouponDiscount(), 0);
 	}
 
 	@Test
@@ -216,7 +216,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyCoupon(coupon);
 
 		// assert
-		assertEquals(BigDecimal.valueOf(5.0), shoppingCart.getCouponDiscount());
+		assertEquals(5.0, shoppingCart.getCouponDiscount(), 0);
 	}
 
 	@Test
@@ -230,7 +230,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyCoupon(coupon);
 
 		// assert
-		assertEquals(BigDecimal.valueOf(0), shoppingCart.getCouponDiscount());
+		assertEquals(0.0, shoppingCart.getCouponDiscount(), 0);
 	}
 
 	@Test
@@ -247,7 +247,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyCoupon(coupon2);
 
 		// assert
-		assertEquals(47.99, shoppingCart.getCouponDiscount().doubleValue(), 0);
+		assertEquals(47.99, shoppingCart.getCouponDiscount(), 0);
 	}
 
 	@Test
@@ -264,7 +264,7 @@ public class ShoppingCartTest {
 		shoppingCart.applyCoupon(coupon1);
 
 		// assert
-		assertEquals(48.99, shoppingCart.getCouponDiscount().doubleValue(), 0);
+		assertEquals(48.99, shoppingCart.getCouponDiscount(), 0);
 	}
 
 	@Test
@@ -276,14 +276,14 @@ public class ShoppingCartTest {
 
 		// execute
 		// assert
-		assertEquals(BigDecimal.valueOf(219.950), shoppingCart.getTotalPrice());
+		assertEquals(BigDecimal.valueOf(219.950), shoppingCart.getTotalAmountBigDecimal());
 	}
 
 	@Test
 	public void getTotalPrice_emptyCart() throws Exception {
 		// execute
 		// assert
-		assertEquals(BigDecimal.valueOf(0), shoppingCart.getTotalPrice());
+		assertEquals(BigDecimal.valueOf(0), shoppingCart.getTotalAmountBigDecimal());
 	}
 
 	/**
@@ -343,7 +343,7 @@ public class ShoppingCartTest {
 		Campaign campaign3 = new Campaign(category_SAAT, DISCOUNT_AMOUNT_50_0, QUANTITY_2, DiscountType.Amount);
 
 		shoppingCart.applyDiscounts(campaign, campaign2, campaign3);
-		
+
 		Coupon coupon1 = new Coupon(MINIMUM_AMOUNT_100, DISCOUNT_AMOUNT_5_0, DiscountType.Amount);
 		Coupon coupon2 = new Coupon(MINIMUM_AMOUNT_100, DISCOUNT_RATE_20_0, DiscountType.Rate);
 
@@ -356,7 +356,7 @@ public class ShoppingCartTest {
 		// assert
 		assertEquals(416.75, totalAmountAfterDiscounts, 0);
 	}
-	
+
 	@Test
 	public void getTotalAmountAfterDiscounts_emptyCart() throws Exception {
 		// setup
@@ -367,7 +367,7 @@ public class ShoppingCartTest {
 		Campaign campaign2 = new Campaign(category_GIYIM, DISCOUNT_AMOUNT_5_0, QUANTITY_3, DiscountType.Amount);
 		Campaign campaign3 = new Campaign(category_SAAT, DISCOUNT_AMOUNT_50_0, QUANTITY_2, DiscountType.Amount);
 		shoppingCart.applyDiscounts(campaign, campaign2, campaign3);
-		
+
 		Coupon coupon1 = new Coupon(MINIMUM_AMOUNT_100, DISCOUNT_AMOUNT_5_0, DiscountType.Amount);
 		Coupon coupon2 = new Coupon(MINIMUM_AMOUNT_100, DISCOUNT_RATE_20_0, DiscountType.Rate);
 		shoppingCart.applyCoupon(coupon1);
@@ -446,7 +446,7 @@ public class ShoppingCartTest {
 
 		// assert
 		assertEquals(
-				"{\"categories\":[{\"title\":\"Elbise\",\"products\":[{\"name\":\"Kadın Kırmızı Uzun Elbise\",\"quantity\":3,\"unitPrice\":39.99,\"totalPrice\":119.97},{\"name\":\"Kadın Siyah File Detaylı Elbise\",\"quantity\":2,\"unitPrice\":49.99,\"totalPrice\":99.98}]}],\"totalPrice\":219.95,\"totalAmount\":171.96}",
+				"{\"categories\":[{\"title\":\"Elbise\",\"products\":[{\"name\":\"Kadın Kırmızı Uzun Elbise\",\"quantity\":3,\"unitPrice\":39.99,\"totalAmount\":119.97},{\"name\":\"Kadın Siyah File Detaylı Elbise\",\"quantity\":2,\"unitPrice\":49.99,\"totalAmount\":99.98}]}],\"totalAmount\":219.95,\"totalAmountAfterDiscount\":171.96}",
 				printed);
 
 	}

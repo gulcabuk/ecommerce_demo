@@ -3,12 +3,17 @@ package com.trendyol.entity;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
 import com.trendyol.shopping.ShoppingCart;
 
-import java.util.Set;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * This class is used to encapsulates {@link Campaign}s which are applied to
@@ -16,24 +21,35 @@ import java.util.Set;
  * 
  * @author zehragulcabukkeskin
  */
+@ApiModel(description = "Campaign")
 public class Campaign {
+
+	/**
+	 * Identifier of the {@link Campaign}.
+	 */
+	@Expose
+	private long id;
 
 	/**
 	 * Category of {@link Campaign}.
 	 */
+	@Expose
 	private Category category;
 	/**
 	 * Discount amount of {@link Campaign}.
 	 */
+	@Expose
 	private double discount;
 	/**
 	 * Minimum quantity of product in {@link ShoppingCart} for {@link #category} of
 	 * {@link Campaign}.
 	 */
+	@Expose
 	private int quantity;
 	/**
 	 * {@link DiscountType} can be rate or amount.
 	 */
+	@Expose
 	private DiscountType discountType;
 
 	/**
@@ -55,24 +71,39 @@ public class Campaign {
 		this.quantity = quantity;
 		this.discountType = discountType;
 	}
+	
+	public Campaign() {}
 
 	/**
 	 * GETTERS
 	 */
-	Category getCategory() {
+	@ApiModelProperty(value = "category")
+	public Category getCategory() {
 		return category;
 	}
 
-	double getDiscount() {
+	@ApiModelProperty(value = "discount")
+	public double getDiscount() {
 		return discount;
 	}
 
-	int getQuantity() {
+	@ApiModelProperty(value = "minimum quantity")
+	public int getQuantity() {
 		return quantity;
 	}
 
-	DiscountType getDiscountType() {
+	@ApiModelProperty(value = "discount type")
+	public DiscountType getDiscountType() {
 		return discountType;
+	}
+
+	@ApiModelProperty(value = "unique identifier")
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	/**
@@ -91,7 +122,8 @@ public class Campaign {
 		for (Entry<Product, Integer> entry : productSet) {
 			Integer productQuantity = entry.getValue();
 			totalQuantity += productQuantity;
-			totalPrice = totalPrice.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(productQuantity)));
+			totalPrice = totalPrice
+					.add(entry.getKey().getPriceBigDecimal().multiply(BigDecimal.valueOf(productQuantity)));
 		}
 
 		// calculate discount..
@@ -103,9 +135,17 @@ public class Campaign {
 		return discount;
 
 	}
-	
+
 	public static Campaign fromJson(String jsonStr) throws JsonSyntaxException {
 		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, Campaign.class);
+	}
+
+	public JsonObject toJson() {
+		return new JsonParser().parse(toJsonString()).getAsJsonObject();
+	}
+
+	String toJsonString() {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
 	}
 
 }

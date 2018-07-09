@@ -3,8 +3,14 @@ package com.trendyol.entity;
 import java.math.BigDecimal;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
 import com.trendyol.shopping.ShoppingCart;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * This class is used to encapsulates {@link Coupon}s which are applied to
@@ -12,19 +18,28 @@ import com.trendyol.shopping.ShoppingCart;
  * 
  * @author zehragulcabukkeskin
  */
+@ApiModel(description = "Coupon")
 public class Coupon {
 
 	/**
+	 * Identifier of the {@link Coupon}.
+	 */
+	@Expose
+	private long id;
+	/**
 	 * Minimum amount which is needed by coupon
 	 */
+	@Expose
 	private double minimumAmount;
 	/**
 	 * Discount amount.
 	 */
+	@Expose
 	private double discount;
 	/**
 	 * {@link DiscountType} of the coupon.
 	 */
+	@Expose
 	private DiscountType discountType;
 
 	/**
@@ -42,20 +57,32 @@ public class Coupon {
 		this.discount = discount;
 		this.discountType = discountType;
 	}
+	
+	public Coupon() {}
 
 	/**
 	 * GETTERS
 	 */
-	double getMinimumAmount() {
+	@ApiModelProperty(value = "minimum amount")
+	public double getMinimumAmount() {
 		return minimumAmount;
 	}
-
-	double getDiscount() {
+	@ApiModelProperty(value = "discount")
+	public double getDiscount() {
 		return discount;
 	}
-
-	DiscountType getDiscountType() {
+	@ApiModelProperty(value = "discount type")
+	public DiscountType getDiscountType() {
 		return discountType;
+	}
+	
+	@ApiModelProperty(value = "unique identifier")
+	public long getId() {
+		return id;
+	}
+	
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	/**
@@ -71,6 +98,14 @@ public class Coupon {
 	
 	public static Coupon fromJson(String jsonStr) throws JsonSyntaxException {
 		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, Coupon.class);
+	}
+	
+	public JsonObject toJson() {
+		return new JsonParser().parse(toJsonString()).getAsJsonObject();
+	}
+
+	String toJsonString() {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
 	}
 
 }

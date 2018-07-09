@@ -13,11 +13,16 @@ import static com.trendyol.JsonProperties.*;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
 import com.trendyol.entity.Campaign;
 import com.trendyol.entity.Category;
 import com.trendyol.entity.Coupon;
 import com.trendyol.entity.Product;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * {@link ShoppingCart} is a class which is used to encapsulates
@@ -26,21 +31,42 @@ import com.trendyol.entity.Product;
  * 
  * @author zehragulcabukkeskin
  */
+@ApiModel(description = "Shopping Cart")
 public class ShoppingCart {
+
+	/**
+	 * Identifier of the {@link ShoppingCart}.
+	 */
+	@Expose
+	private long id;
 
 	/**
 	 * Products are stored according to their child categories.
 	 */
+	@Expose
 	private Map<Category, Map<Product, Integer>> productsWithCategories;
 	/**
 	 * Total discount amount of campaigns.
 	 */
+	@Expose
 	private BigDecimal campaignDiscount = new BigDecimal(0);
 	/**
 	 * Total discount amount of coupons.
 	 */
+	@Expose
 	private BigDecimal couponDiscount = new BigDecimal(0);
+	/**
+	 * Total amount.
+	 */
+	@Expose
+	private BigDecimal totalAmount = new BigDecimal(0);
+	/**
+	 * Total amount after discount.
+	 */
+	@Expose
+	private BigDecimal totalAmountAfterDiscount = new BigDecimal(0);
 
+	public ShoppingCart() {}
 	/**
 	 * Adds given product to the {@link #productsWithCategories} map.
 	 * 
@@ -82,22 +108,75 @@ public class ShoppingCart {
 			for (Entry<Product, Integer> productEntry : productSet) {
 				Product product = productEntry.getKey();
 				Integer quantity = productEntry.getValue();
-				BigDecimal unitPrice = product.getPrice().setScale(2, RoundingMode.HALF_EVEN);
-	
+				BigDecimal unitPrice = product.getPriceBigDecimal().setScale(2, RoundingMode.HALF_EVEN);
+
 				JsonObject productJson = new JsonObject();
 				productJson.addProperty(NAME, product.getTitle());
 				productJson.addProperty(QUANTITY, quantity);
 				productJson.addProperty(UNIT_PRICE, unitPrice);
-				productJson.addProperty(TOTAL_PRICE, calculateTotalPrice(quantity, unitPrice));
+				productJson.addProperty(TOTAL_AMOUNT, calculateTotalPrice(quantity, unitPrice));
 				productArrayJson.add(productJson);
 			}
 			categoryJson.add(PRODUCTS, productArrayJson);
 			categoriesArrayJson.add(categoryJson);
 		}
 		printed.add(CATEGORIES, categoriesArrayJson);
-		printed.addProperty(TOTAL_PRICE, getTotalPrice());
-		printed.addProperty(TOTAL_AMOUNT, getTotalAmountAfterDiscounts());
+		printed.addProperty(TOTAL_AMOUNT, getTotalAmount());
+		printed.addProperty(TOTAL_AMOUNT_AFTER_DISCOUNT, getTotalAmountAfterDiscounts());
 		return printed;
+	}
+
+	@ApiModelProperty(value = "unique identifier")
+	public long getId() {
+		return id;
+	}
+
+	@ApiModelProperty(value = "campaign discount")
+	public double getCampaignDiscount() {
+		return getCampaignDiscountBigDecimal().setScale(2, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	@ApiModelProperty(value = "coupon discount")
+	public double getCouponDiscount() {
+		return getCouponDiscountBigDecimal().setScale(2, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	@ApiModelProperty(value = "total amount")
+	public double getTotalAmount() {
+		return getTotalAmountBigDecimal().setScale(2, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	@ApiModelProperty(value = "total amount after discounts")
+	public double getTotalAmountAfterDiscounts() {
+		return getTotalAmountAfterDiscountsBigDecimal().setScale(2, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	/**
+	 * Getter for {@link #productsWithCategories} which contains {@link Product}s
+	 * according to their sub-categories.
+	 */
+	@ApiModelProperty(value = "product-quantity map according to their categories")
+	public Map<Category, Map<Product, Integer>> getProductsWithCategories() {
+		if (productsWithCategories == null) {
+			productsWithCategories = new HashMap<Category, Map<Product, Integer>>();
+		}
+		return productsWithCategories;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public static ShoppingCart fromJson(String jsonStr) throws JsonSyntaxException {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, ShoppingCart.class);
+	}
+
+	public JsonObject toJson() {
+		return new JsonParser().parse(toJsonString()).getAsJsonObject();
+	}
+
+	String toJsonString() {
+		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
 	}
 
 	/**
@@ -152,35 +231,24 @@ public class ShoppingCart {
 	 *            to apply.
 	 */
 	void applyCoupon(Coupon coupon) {
-		couponDiscount = couponDiscount.add(
-				coupon.calculateDiscount(getTotalPrice().subtract(getCampaignDiscount()).subtract(getCouponDiscount())));
-	}
-
-	/**
-	 * Getter for {@link #productsWithCategories} which contains {@link Product}s
-	 * according to their sub-categories.
-	 */
-	Map<Category, Map<Product, Integer>> getProductsWithCategories() {
-		if (productsWithCategories == null) {
-			productsWithCategories = new HashMap<Category, Map<Product, Integer>>();
-		}
-		return productsWithCategories;
+		couponDiscount = couponDiscount.add(coupon.calculateDiscount(getTotalAmountBigDecimal()
+				.subtract(getCampaignDiscountBigDecimal()).subtract(getCouponDiscountBigDecimal())));
 	}
 
 	/**
 	 * Getter for campaign discount which is calculated by
 	 * {@link #applyDiscounts(Campaign...)}.
 	 */
-	BigDecimal getCampaignDiscount() {
-		return campaignDiscount.setScale(2, RoundingMode.HALF_EVEN);
+	BigDecimal getCampaignDiscountBigDecimal() {
+		return campaignDiscount;
 	}
 
 	/**
 	 * Getter for coupon discount which is calculated by
 	 * {@link #applyCoupon(Coupon)}.
 	 */
-	BigDecimal getCouponDiscount() {
-		return couponDiscount.setScale(2, RoundingMode.HALF_EVEN);
+	BigDecimal getCouponDiscountBigDecimal() {
+		return couponDiscount;
 	}
 
 	/**
@@ -188,17 +256,17 @@ public class ShoppingCart {
 	 * 
 	 * @return total price as {@link BigDecimal}.
 	 */
-	BigDecimal getTotalPrice() {
-		BigDecimal totalPrice = new BigDecimal(0);
+	BigDecimal getTotalAmountBigDecimal() {
+		this.totalAmount = new BigDecimal(0);
 		Collection<Map<Product, Integer>> productMapCollection = getProductsWithCategories().values();
 		for (Map<Product, Integer> productMap : productMapCollection) {
 			Set<Entry<Product, Integer>> productSet = productMap.entrySet();
 			for (Entry<Product, Integer> productEntry : productSet) {
 				Integer quantity = productEntry.getValue();
-				totalPrice = totalPrice.add(productEntry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity)));
+				totalAmount = totalAmount.add(productEntry.getKey().getPriceBigDecimal().multiply(BigDecimal.valueOf(quantity)));
 			}
 		}
-		return totalPrice;
+		return totalAmount;
 	}
 
 	/**
@@ -206,9 +274,10 @@ public class ShoppingCart {
 	 * 
 	 * @return total amount after discounts.
 	 */
-	double getTotalAmountAfterDiscounts() {
-		return getTotalPrice().subtract(getCampaignDiscount()).subtract(getCouponDiscount())
-				.setScale(2, RoundingMode.HALF_EVEN).doubleValue();
+	BigDecimal getTotalAmountAfterDiscountsBigDecimal() {
+		this.totalAmountAfterDiscount = getTotalAmountBigDecimal().subtract(getCampaignDiscountBigDecimal())
+				.subtract(getCouponDiscountBigDecimal());
+		return this.totalAmountAfterDiscount;
 	}
 
 	/**
@@ -250,8 +319,5 @@ public class ShoppingCart {
 	private BigDecimal calculateTotalPrice(Integer quantity, BigDecimal unitPrice) {
 		return unitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_EVEN);
 	}
-	
-	public static ShoppingCart fromJson(String jsonStr) throws JsonSyntaxException {
-		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(jsonStr, ShoppingCart.class);
-	}
+
 }

@@ -1,6 +1,7 @@
 package com.trendyol.service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -17,12 +18,13 @@ import com.trendyol.logger.ServiceLogger;
 import com.trendyol.storage.Postgres;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @Path("categories")
 @Api(value = "categories")
 @Produces({ "application/json" })
 public class CategoryService {
-	
+
 	/**
 	 * Postgresql utility class.
 	 */
@@ -42,23 +44,24 @@ public class CategoryService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createCategory(String jsonStr, @Context HttpServletRequest request) {
+	@ApiOperation(value = "Creates category", response = Category.class)
+	public Response createCategory(@BeanParam Category category, @Context HttpServletRequest request) {
 		JsonObject response = new JsonObject();
 		try {
+			String jsonStr = category.toJson().toString();
 			ServiceLogger.logSaveObjectRequest(jsonStr, Product.class);
-			Category category = Category.fromJson(jsonStr);
 			int savedCategoryId = postgres.saveObject(category);
 			if (savedCategoryId != 0) {
-				response.addProperty(JsonProperties.ID, savedCategoryId);
-				response.addProperty(JsonProperties.SUCCESS, true);
+				category.setId(savedCategoryId);
+				response.add(JsonProperties.CATEGORY, category.toJson());
 			} else {
-				response.addProperty(JsonProperties.FAILURE,
+				response.addProperty(JsonProperties.MESSAGE,
 						String.format("\"saving category failed: {request:%s}\"", jsonStr));
 			}
 		} catch (Exception e) {
-			ServiceLogger.logSaveObjectError(jsonStr, Product.class, e);
-			response.addProperty(JsonProperties.FAILURE,
-					String.format("\"unexpected error during creating category: {request:%s}\"", jsonStr));
+			ServiceLogger.logSaveObjectError(category, Category.class, e);
+			response.addProperty(JsonProperties.MESSAGE,
+					String.format("\"unexpected error during creating category: {request:%s}\"", category));
 		}
 		return ServiceUtils.createResponse200(response.toString());
 	}

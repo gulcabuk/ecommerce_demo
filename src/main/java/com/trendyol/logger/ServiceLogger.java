@@ -12,17 +12,18 @@ public class ServiceLogger {
 		logger.info(String.format(template, type.getSimpleName(), jsonData));
 	}
 
-	public static <T> void logSaveObjectError(String jsonData, Class<T> type, Exception e) {
+	public static <T> void logSaveObjectError(Object jsonData, Class<T> type, Exception e) {
 		String template = "error during save request: type:%s, data:%s";
 		logger.error(String.format(template, type.getSimpleName(), jsonData), e);
 	}
 
-	public static <T> void logFindObjectRequest(String jsonData, Class<T> type) {
-		String template = "handling find request: type:%s, data:%s";
-		logger.info(String.format(template, type.getSimpleName(), jsonData));
+	public static <T> void logaddProductToShoppingCartRequest(long shoppingCartId, long productId, int quantity,
+			Class<T> type) {
+		String template = "unexpected error during adding product to shopping cart: {cartId:%s, productId:%s, quantity:%s}";
+		logger.info(String.format(template, type.getSimpleName(), shoppingCartId, productId, quantity));
 
 	}
-	
+
 	public static <T> void logAddShoppingCartObjectError(String jsonData, Class<T> type, Exception e) {
 		String template = "error during adding product to shopping cart: type:%s, data:%s";
 		logger.error(String.format(template, type.getSimpleName(), jsonData), e);
@@ -38,5 +39,4 @@ public class ServiceLogger {
 		String template = "error during handling print request: type:%s, id:%s";
 		logger.info(String.format(template, type.getSimpleName(), id));
 	}
-
 }

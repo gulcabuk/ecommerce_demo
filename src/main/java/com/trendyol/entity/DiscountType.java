@@ -2,6 +2,8 @@ package com.trendyol.entity;
 
 import java.math.BigDecimal;
 
+import io.swagger.annotations.ApiModel;
+
 /**
  * This class is used to differentiate {@link DiscountType}s. Enumeration values
  * also contains apply methods for {@link Campaign} and {@link Coupon} classes
@@ -10,6 +12,7 @@ import java.math.BigDecimal;
  * @author zehragulcabukkeskin
  *
  */
+@ApiModel(description = "DiscountType")
 public enum DiscountType implements DiscountStrategy {
 	Rate {
 

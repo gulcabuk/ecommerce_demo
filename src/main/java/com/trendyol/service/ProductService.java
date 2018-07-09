@@ -1,6 +1,7 @@
 package com.trendyol.service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -16,6 +17,7 @@ import com.trendyol.logger.ServiceLogger;
 import com.trendyol.storage.Postgres;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @Path("products")
 @Api(value = "products")
@@ -41,23 +43,24 @@ public class ProductService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createProduct(String jsonStr, @Context HttpServletRequest request) {
+	@ApiOperation(value = "Creates product", response = Product.class)
+	public Response createProduct(@BeanParam Product product, @Context HttpServletRequest request) {
 		JsonObject response = new JsonObject();
 		try {
+			String jsonStr = product.toJson().toString();
 			ServiceLogger.logSaveObjectRequest(jsonStr, Product.class);
-			Product product = Product.fromJson(jsonStr);
 			int savedProductId = postgres.saveObject(product);
 			if (savedProductId != 0) {
-				response.addProperty(JsonProperties.ID, savedProductId);
-				response.addProperty(JsonProperties.SUCCESS, true);
+				product.setId(savedProductId);
+				response.add(JsonProperties.PRODUCT, product.toJson());
 			} else {
-				response.addProperty(JsonProperties.FAILURE,
+				response.addProperty(JsonProperties.MESSAGE,
 						String.format("\"saving product failed: {request:%s}\"", jsonStr));
 			}
 		} catch (Exception e) {
-			ServiceLogger.logSaveObjectError(jsonStr, Product.class, e);
-			response.addProperty(JsonProperties.FAILURE,
-					String.format("\"unexpected error during creating product: {request:%s}\"", jsonStr));
+			ServiceLogger.logSaveObjectError(product, Product.class, e);
+			response.addProperty(JsonProperties.MESSAGE,
+					String.format("\"unexpected error during creating product: {request:%s}\"", product));
 		}
 		return ServiceUtils.createResponse200(response.toString());
 	}

@@ -1,6 +1,7 @@
 package com.trendyol.service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -16,6 +17,7 @@ import com.trendyol.logger.ServiceLogger;
 import com.trendyol.storage.Postgres;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @Path("campaigns")
 @Api(value = "campaigns")
@@ -41,23 +43,24 @@ public class CampaignService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createcampaign(String jsonStr, @Context HttpServletRequest request) {
+	@ApiOperation(value = "Creates campaign", response = Campaign.class)
+	public Response createCampaign(@BeanParam Campaign campaign, @Context HttpServletRequest request) {
 		JsonObject response = new JsonObject();
 		try {
-			ServiceLogger.logSaveObjectRequest(jsonStr, Campaign.class);
-			Campaign campaign = Campaign.fromJson(jsonStr);
+			String campaignJson = campaign.toJson().toString();
+			ServiceLogger.logSaveObjectRequest(campaignJson, Campaign.class);
 			int savedcampaignId = postgres.saveObject(campaign);
 			if (savedcampaignId != 0) {
-				response.addProperty(JsonProperties.ID, savedcampaignId);
-				response.addProperty(JsonProperties.SUCCESS, true);
+				campaign.setId(savedcampaignId);
+				response.add(JsonProperties.CAMPAIGN, campaign.toJson());
 			} else {
-				response.addProperty(JsonProperties.FAILURE,
-						String.format("\"saving campaign failed: {request:%s}\"", jsonStr));
+				response.addProperty(JsonProperties.MESSAGE,
+						String.format("\"saving campaign failed: {request:%s}\"", campaignJson));
 			}
 		} catch (Exception e) {
-			ServiceLogger.logSaveObjectError(jsonStr, Campaign.class, e);
-			response.addProperty(JsonProperties.FAILURE,
-					String.format("\"unexpected error during creating campaign: {request:%s}\"", jsonStr));
+			ServiceLogger.logSaveObjectError(campaign, Campaign.class, e);
+			response.addProperty(JsonProperties.MESSAGE,
+					String.format("\"unexpected error during creating campaign: {request:%s}\"", campaign));
 		}
 		return ServiceUtils.createResponse200(response.toString());
 	}
