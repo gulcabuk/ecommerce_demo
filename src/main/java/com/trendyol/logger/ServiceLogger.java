@@ -1,12 +1,11 @@
 package com.trendyol.logger;
 
-import org.apache.log4j.Logger;
-
-import com.trendyol.shopping.ShoppingCart;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ServiceLogger {
 
-	private static Logger logger = Logger.getLogger(ServiceLogger.class);
+	private static Logger logger = LogManager.getLogger(ServiceLogger.class);
 
 	public static <T> void logSaveObjectRequest(String jsonData, Class<T> type) {
 		String template = "handling save request: type:%s, data:%s";
